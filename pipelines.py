@@ -11,8 +11,9 @@ class DatabasePipeline:
             # Update these with your MySQL credentials
             self.conn = mysql.connector.connect(
                 host='localhost',
-                user='your_mysql_username',  # Change this
-                password='your_mysql_password',  # Change this
+                port=3306,
+                user='root',  # Change this
+                password='12345',  # Change this
                 database='investor_info'
             )
             if self.conn.is_connected():

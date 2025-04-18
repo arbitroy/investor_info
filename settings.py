@@ -1,10 +1,16 @@
+# Scrapy settings for investor_info project
+BOT_NAME = 'investor_info'
+
+SPIDER_MODULES = ['investor_info.spiders']
+NEWSPIDER_MODULE = 'investor_info.spiders'
+
 # Enable the pipeline
 ITEM_PIPELINES = {
    'investor_info.pipelines.DatabasePipeline': 300,
 }
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure a reasonable download delay to be respectful
 DOWNLOAD_DELAY = 2
