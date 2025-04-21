@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}{{ news.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.news-header {
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+.news-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+.news-content p {
+    margin-bottom: 1.5rem;
+}
+.source-link {
+    margin: 30px 0;
+}
+.news-meta {
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+.related-article {
+    transition: transform 0.3s ease;
+}
+.related-article:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<article>
+    <div class="news-header {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}border-secondary{% endif %}">
+        <h1 class="mb-3">{{ news.title }}</h1>
+        <div class="news-meta">
+            <span class="badge bg-primary">{{ news.source }}</span>
+            <span class="text-muted ms-2">Published: {{ news.publish_date }}</span>
+            
+            {% if current_user.is_authenticated %}
+            <div class="float-end">
+                <form action="{{ url_for('toggle_bookmark', news_id=news.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm {% if is_bookmarked %}btn-warning{% else %}btn-outline-secondary{% endif %}">
+                        <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                        {% if is_bookmarked %}Saved{% else %}Save{% endif %}
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if news.summary %}
+        <div class="lead mb-4">
+            {{ news.summary }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Article content -->
+            <div class="news-content">
+                {% if news.content %}
+                    {% for paragraph in news.content.split('\n\n') %}
+                        <p>{{ paragraph }}</p>
+                    {% endfor %}
+                {% else %}
+                    <p class="alert alert-info">Full article content is not available. Please visit the original source for the complete article.</p>
+                {% endif %}
+                
+                <div class="source-link">
+                    <a href="{{ news.link }}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt me-2"></i>Read Original Article
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Share buttons -->
+            <div class="mb-4">
+                <h5>Share this article</h5>
+                <div class="btn-group" role="group">
+                    <a href="https://twitter.com/intent/tweet?url={{ news.link | urlencode }}&text={{ news.title | urlencode }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="fab fa-twitter me-1"></i> Twitter
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ news.link | urlencode }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="fab fa-facebook me-1"></i> Facebook
+                    </a>
+                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ news.link | urlencode }}&title={{ news.title | urlencode }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="fab fa-linkedin me-1"></i> LinkedIn
+                    </a>
+                    <a href="mailto:?subject={{ news.title | urlencode }}&body={{ news.link | urlencode }}" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-1"></i> Email
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Related articles -->
+            <div class="card mb-4 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                <div class="card-header">
+                    <h4>Related Articles</h4>
+                </div>
+                <div class="card-body">
+                    {% if related_news %}
+                        {% for article in related_news %}
+                        <div class="card mb-3 related-article {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="{{ url_for('news_detail', news_id=article.id) }}" class="text-decoration-none {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}text-light{% endif %}">
+                                        {{ article.title }}
+                                    </a>
+                                </h5>
+                                <p class="card-text small text-muted">{{ article.source }} - {{ article.publish_date }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="card-text">No related articles found.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Financial terms -->
+            <div class="card {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                <div class="card-header">
+                    <h4>Financial Terms</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Understanding financial terminology can help you better interpret news articles.</p>
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Bull Market</h6>
+                            </div>
+                            <p class="mb-1 small">A market condition in which prices are rising or expected to rise.</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Bear Market</h6>
+                            </div>
+                            <p class="mb-1 small">A market condition in which prices are falling or expected to fall.</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Volatility</h6>
+                            </div>
+                            <p class="mb-1 small">A statistical measure of the dispersion of returns for a given security or market index.</p>
+                        </a>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-sm btn-outline-primary">View Financial Glossary</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+{% endblock %}

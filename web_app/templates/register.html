@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Investor Info{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card my-5 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+            <div class="card-header">
+                <h4 class="text-center">Create Your Account</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('register') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}" id="password" name="password" required>
+                        <div class="form-text {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}text-light{% endif %}">Password must be at least 8 characters long.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password_confirm" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}" id="password_confirm" name="password_confirm" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="watch_symbols" class="form-label">Stocks to Watch (optional)</label>
+                        <input type="text" class="form-control {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}" id="watch_symbols" name="watch_symbols" placeholder="e.g., AAPL, MSFT, GOOGL">
+                        <div class="form-text {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}text-light{% endif %}">Enter comma-separated stock symbols to track.</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}" class="{% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}text-light{% endif %}">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

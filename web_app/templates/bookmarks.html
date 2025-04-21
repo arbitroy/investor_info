@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookmarks - Investor Info{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">My Bookmarked Articles</h1>
+    
+    {% if bookmarks %}
+        <div class="row">
+            {% for bookmark in bookmarks %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ bookmark.news.title }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            <span class="badge bg-secondary">{{ bookmark.news.source }}</span>
+                            <small>{{ bookmark.news.publish_date }}</small>
+                        </h6>
+                        <p class="card-text">
+                            {% if bookmark.news.summary %}
+                                {{ bookmark.news.summary[:150] }}{% if bookmark.news.summary|length > 150 %}...{% endif %}
+                            {% else %}
+                                {{ bookmark.news.content[:150] if bookmark.news.content else "" }}{% if bookmark.news.content and bookmark.news.content|length > 150 %}...{% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('news_detail', news_id=bookmark.news.id) }}" class="btn btn-sm btn-primary">Read More</a>
+                            <form action="{{ url_for('toggle_bookmark', news_id=bookmark.news.id) }}" method="post">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash-alt"></i> Remove
+                                </button>
+                            </form>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Bookmarked on: {{ bookmark.created_at.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+            <p class="mb-0">You haven't bookmarked any articles yet. Browse news articles and click the bookmark icon to save them here.</p>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('home') }}" class="btn btn-primary">Browse Latest News</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

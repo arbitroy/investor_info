@@ -1,26 +1,190 @@
 {% extends "base.html" %}
 
-{% block title %}Investor Info - Financial News{% endblock %}
+{% block title %}Investor Info - Financial News and Data{% endblock %}
 
 {% block content %}
-<h1>Latest Financial News</h1>
-
-<div class="row mt-4">
-    {% for article in news %}
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
+<div class="row">
+    <!-- Market overview section -->
+    <div class="col-lg-8">
+        <div class="card mb-4 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+            <div class="card-header">
+                <h4>Market Overview</h4>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">{{ article.title }}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">{{ article.source }} - {{ article.scraped_date.strftime('%Y-%m-%d') }}</h6>
-                <p class="card-text">{{ article.summary }}</p>
-                <a href="{{ url_for('news_detail', news_id=article.id) }}" class="card-link">Read More</a>
+                <div class="row">
+                    {% for index in index_data %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    {% if index.symbol == "^GSPC" %}
+                                        S&P 500
+                                    {% elif index.symbol == "^DJI" %}
+                                        Dow Jones
+                                    {% elif index.symbol == "^IXIC" %}
+                                        NASDAQ
+                                    {% elif index.symbol == "^FTSE" %}
+                                        FTSE 100
+                                    {% elif index.symbol == "^N225" %}
+                                        Nikkei 225
+                                    {% else %}
+                                        {{ index.symbol }}
+                                    {% endif %}
+                                </h5>
+                                <h3>{{ index.price }}</h3>
+                                <p class="card-text {% if index.change_amount > 0 %}text-success{% elif index.change_amount < 0 %}text-danger{% endif %}">
+                                    {% if index.change_amount > 0 %}
+                                        <i class="fas fa-arrow-up"></i>
+                                    {% elif index.change_amount < 0 %}
+                                        <i class="fas fa-arrow-down"></i>
+                                    {% endif %}
+                                    {{ index.change_amount }} ({{ index.change_percent }}%)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="col-12">
-        <p>No articles found. Please check back later.</p>
+
+    <!-- Trending stocks section -->
+    <div class="col-lg-4">
+        <div class="card mb-4 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+            <div class="card-header">
+                <h4>Trending Stocks</h4>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for stock in trending_stocks %}
+                    <a href="{{ url_for('stock_detail', symbol=stock.symbol) }}" class="list-group-item list-group-item-action {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ stock.symbol }}</h5>
+                            <small>${{ stock.price }}</small>
+                        </div>
+                        <p class="mb-1 {% if stock.change_amount > 0 %}text-success{% elif stock.change_amount < 0 %}text-danger{% endif %}">
+                            {% if stock.change_amount > 0 %}
+                                <i class="fas fa-arrow-up"></i>
+                            {% elif stock.change_amount < 0 %}
+                                <i class="fas fa-arrow-down"></i>
+                            {% endif %}
+                            {{ stock.change_amount }} ({{ stock.change_percent }}%)
+                        </p>
+                        <small>Volume: {{ '{:,}'.format(stock.volume) }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
-    {% endfor %}
 </div>
+
+<!-- Latest financial news section -->
+<div class="card mb-4 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+    <div class="card-header">
+        <h4>Latest Financial News</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for article in news %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ article.title }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            <span class="badge bg-secondary">{{ article.source }}</span>
+                            <small>{{ article.publish_date }}</small>
+                        </h6>
+                        <p class="card-text">
+                            {% if article.summary %}
+                                {{ article.summary[:150] }}{% if article.summary|length > 150 %}...{% endif %}
+                            {% else %}
+                                {{ article.content[:150] if article.content else "" }}{% if article.content and article.content|length > 150 %}...{% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('news_detail', news_id=article.id) }}" class="btn btn-sm btn-primary">Read More</a>
+                            {% if current_user.is_authenticated %}
+                                <form action="{{ url_for('toggle_bookmark', news_id=article.id) }}" method="post">
+                                    {% set is_bookmarked = article.bookmarks.filter_by(user_id=current_user.id).first() is not none %}
+                                    <button type="submit" class="btn btn-sm {% if is_bookmarked %}btn-warning{% else %}btn-outline-secondary{% endif %}">
+                                        <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <p>No articles found. Please check back later.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Investment resources section -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+            <div class="card-header">
+                <h4>Investment Resources</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark{% endif %}">
+                    <li class="list-group-item {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        <a href="#" class="{% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}text-light{% endif %}">Investment Basics Guide</a>
+                    </li>
+                    <li class="list-group-item {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                        <i class="fas fa-calculator me-2"></i>
+                        <a href="#" class="{% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}text-light{% endif %}">Investment Calculators</a>
+                    </li>
+                    <li class="list-group-item {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        <a href="#" class="{% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}text-light{% endif %}">Asset Allocation Models</a>
+                    </li>
+                    <li class="list-group-item {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+                        <i class="fas fa-book me-2"></i>
+                        <a href="#" class="{% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}text-light{% endif %}">Financial Glossary</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}">
+            <div class="card-header">
+                <h4>Get Started</h4>
+            </div>
+            <div class="card-body">
+                <p>Investor Info provides you with the latest financial news and data to help you make informed investment decisions.</p>
+                <p>Create an account to customize your experience, save favorite articles, and track stocks you're interested in.</p>
+                <div class="d-grid gap-2">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('profile') }}" class="btn btn-primary">View Your Profile</a>
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary">Create an Account</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // You could add JavaScript for dynamic content here
+    // For example, refreshing stock prices or showing charts
+    console.log('Home page loaded');
+});
+</script>
 {% endblock %}
