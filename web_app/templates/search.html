@@ -80,16 +80,21 @@
                                         </a>
                                     </h5>
                                     <p class="mb-1">
-                                        {% for sentence in article.sentences if query.lower() in sentence.lower() %}
-                                            {{ sentence|replace(query, '<span class="bg-warning text-dark">'+query+'</span>')|safe }}...
-                                            {% break %}
-                                        {% else %}
+                                        {% set query_found = false %}
+                                        {% for sentence in article.sentences %}
+                                            {% if query.lower() in sentence.lower() and not query_found %}
+                                                {{ sentence|replace(query, '<span class="bg-warning text-dark">'+query+'</span>')|safe }}...
+                                                {% set query_found = true %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if not query_found %}
                                             {% if article.summary %}
                                                 {{ article.summary[:150] }}{% if article.summary|length > 150 %}...{% endif %}
                                             {% else %}
                                                 {{ article.content[:150] if article.content else "" }}{% if article.content and article.content|length > 150 %}...{% endif %}
                                             {% endif %}
-                                        {% endfor %}
+                                        {% endif %}
                                     </p>
                                     <div class="d-flex mt-2 align-items-center small text-muted">
                                         <span class="me-3">

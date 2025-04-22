@@ -97,7 +97,8 @@
                 </div>
                 <div class="card-body">
                     {% if watched_stocks %}
-                        <div class="row" id="watchlist" data-symbols="{{ ','.join([stock.symbol for stock in watched_stocks]) }}">
+                        {% set watched_symbols = watched_stocks|map(attribute='symbol')|join(',') %}
+                        <div class="row" id="watchlist" data-symbols="{{ watched_symbols }}">
                             {% for stock in watched_stocks %}
                                 <div class="col-md-6 mb-3">
                                     <div class="card stock-card {% if current_user.is_authenticated and current_user.preferences and current_user.preferences.theme == 'dark' %}bg-dark text-light border-secondary{% endif %}" data-symbol="{{ stock.symbol }}">
