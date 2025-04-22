@@ -358,3 +358,60 @@ if __name__ == '__main__':
         # Create all tables if they don't exist
         db.create_all()
     app.run(debug=True)
+
+
+def analyze_content_relevance(sample_size=100):
+    """Analyze the relevance of collected articles to financial decision-making"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get a random sample of articles
+    cursor.execute("""
+        SELECT id, title, summary 
+        FROM financial_news
+        ORDER BY RAND()
+        LIMIT %s
+    """, (sample_size,))
+    
+    articles = cursor.fetchall()
+    
+    # Define relevance categories and associated keywords
+    relevance_categories = {
+        'investment': ['stocks', 'bonds', 'invest', 'portfolio', 'dividend', 'yield'],
+        'market_analysis': ['market', 'trend', 'analysis', 'forecast', 'prediction'],
+        'company_performance': ['earnings', 'revenue', 'profit', 'loss', 'performance'],
+        'economic_indicators': ['gdp', 'inflation', 'unemployment', 'interest rate', 'fed'],
+        'irrelevant': ['celebrity', 'entertainment', 'sports', 'weather', 'politics']
+    }
+    
+    # Analyze each article
+    results = {category: 0 for category in relevance_categories}
+    total_relevant = 0
+    
+    for article in articles:
+        content = f"{article['title']} {article['summary'] or ''}".lower()
+        max_score = 0
+        best_category = None
+        
+        for category, keywords in relevance_categories.items():
+            score = sum(1 for keyword in keywords if keyword in content)
+            if score > max_score:
+                max_score = score
+                best_category = category
+        
+        results[best_category] += 1
+        if best_category != 'irrelevant':
+            total_relevant += 1
+    
+    # Calculate percentage relevant
+    percent_relevant = (total_relevant / sample_size) * 100
+    
+    # Print results
+    print(f"Content relevance analysis of {sample_size} articles:")
+    for category, count in results.items():
+        print(f"  {category}: {count} articles ({count/sample_size*100:.1f}%)")
+    print(f"Total relevant to financial decision-making: {percent_relevant:.1f}%")
+    
+    return results, percent_relevant
+
+
